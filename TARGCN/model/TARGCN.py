@@ -140,12 +140,11 @@ class TARGCN_cell(nn.Module):
         tcn_input = x.permute(0, 2, 3, 1).reshape(b * n, d, t)  # b*n d t
         TA_output = self.TA_layer(TA_input)
         tcn_output = self.tcn(tcn_input).reshape(b, n, d, t).permute(0, 3, 1, 2)
+        x_gconv_TA=self.gcn(TA_output, node_embeddings)
+        x_gconv_TA=self.gcn(x_gconv_TA, node_embeddings)
 
-        x_gconv_TA=self.gcn(TA_output)
-        x_gconv_TA=self.gcn(x_gconv_TA)
-
-        x_gconv_tcn=self.gcn(tcn_output)
-        x_gconv_tcn=self.gcn(x_gconv_tcn)
+        x_gconv_tcn=self.gcn(tcn_output, node_embeddings)
+        x_gconv_tcn=self.gcn(x_gconv_tcn, node_embeddings)
         # current_inputs = x
         # output_hidden = []
         # for i in range(self.num_layers):
