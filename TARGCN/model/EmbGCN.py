@@ -66,8 +66,8 @@ class EmbGCN(nn.Module):
         supports = F.softmax(F.relu(torch.mm(node_embeddings, node_embeddings.transpose(0, 1))), dim=1) # N N
         supports = torch.eye(node_num).to(supports.device)+supports
         #
-        x_static = torch.einsum("nm,btmc->btnc",torch.softmax(self.sym_norm_Adj_matrix,dim=-1),x)
-        x_static = self.linear(x_static) # btnc
+        # x_static = torch.einsum("nm,btmc->btnc",torch.softmax(self.sym_norm_Adj_matrix,dim=-1),x)
+        # x_static = self.linear(x_static) # btnc
 
 
 
@@ -77,7 +77,8 @@ class EmbGCN(nn.Module):
         x_g = torch.einsum("nm,btmc->btnc", supports, x)      #B, cheb_k, N, dim_in
 
         x_gconv = torch.einsum('btni,nio->btno', x_g, weights) + bias     #b, N, dim_out
-        return x_gconv+torch.sigmoid(x_static)*x_static
+        # return x_gconv+torch.sigmoid(x_static)*x_static
+        return x_gconv
 
 class EmbGCN_noGate(nn.Module):
     def __init__(self, dim_in, dim_out, adj,cheb_k, embed_dim):
