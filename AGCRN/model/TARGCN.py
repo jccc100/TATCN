@@ -123,7 +123,7 @@ class AVWDCRNN(nn.Module):
         self.tcn=TemporalConvNet(dim_in,[1,1,1],3,0.2)
         for _ in range(1, num_layers):
             self.dcrnn_cells.append(GRU(node_num, dim_out, dim_out,self.adj ,cheb_k, embed_dim))
-        # self.trans_layer_T = transformer_layer(dim_out, dim_out, 2, 2)
+        self.trans_layer_T = transformer_layer(dim_out, dim_out, 2, 2)
 
     def forward(self, x, init_state, node_embeddings):
         # x=self.trans_layer_T(x.permute(0,3,2,1))
