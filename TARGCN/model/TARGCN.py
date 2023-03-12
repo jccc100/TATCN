@@ -130,7 +130,7 @@ class TARGCN_cell(nn.Module):
         self.tcn = TemporalConvNet(dim_in, [1, 1, 1], 3, 0.2)
         self.TA_layer = TA_layer(dim_out, dim_out, 2, 2)
 
-    def forward(self, x, init_state, node_embeddings):
+    def forward(self, x, node_embeddings):
 
         assert x.shape[2] == self.node_num and x.shape[3] == self.input_dim
         seq_length = x.shape[1]
@@ -194,8 +194,8 @@ class TARGCN(nn.Module):
         #target: B, T_2, N, D
         #supports = F.softmax(F.relu(torch.mm(self.nodevec1, self.nodevec1.transpose(0,1))), dim=1)
 
-        init_state = self.encoder.init_hidden(source.shape[0])
-        output = self.encoder(source, init_state, self.node_embeddings)      #B, T, N, hidden
+        # init_state = self.encoder.init_hidden(source.shape[0])
+        output = self.encoder(source, self.node_embeddings)      #B, T, N, hidden
         output = output[:, -6:, :, :]
         output = self.end_conv((output))                         #B, T*C, N, 1
 
