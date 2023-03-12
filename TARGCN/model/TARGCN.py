@@ -162,11 +162,11 @@ class TARGCN_cell(nn.Module):
         # return current_inputs, output_hidden
         return x_gconv_TA+x_gconv_tcn
 
-    def init_hidden(self, batch_size):
-        init_states = []
-        for i in range(self.num_layers):
-            init_states.append(self.dcrnn_cells[i].init_hidden_state(batch_size))
-        return torch.stack(init_states, dim=0)      #(num_layers, B, N, hidden_dim)
+    # def init_hidden(self, batch_size):
+    #     init_states = []
+    #     for i in range(self.num_layers):
+    #         init_states.append(self.dcrnn_cells[i].init_hidden_state(batch_size))
+    #     return torch.stack(init_states, dim=0)      #(num_layers, B, N, hidden_dim)
 
 class TARGCN(nn.Module):
     def __init__(self, args,adj=None):
