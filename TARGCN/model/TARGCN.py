@@ -122,7 +122,7 @@ class TARGCN_cell(nn.Module):
 
         # self.dcrnn_cells = nn.ModuleList()
         # self.dcrnn_cells.append(GRU(node_num, dim_in, dim_out, self.adj,cheb_k, embed_dim))
-        # self.tcn=TemporalConvNet(dim_in,[1,1,1],3,0.2)
+        # self.tcn=TemporalConvNet(dim_in,[3],3,0.2)
         # for _ in range(1, num_layers):
         #     self.dcrnn_cells.append(GRU(node_num, dim_out, dim_out,self.adj ,cheb_k, embed_dim))
 
