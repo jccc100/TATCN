@@ -136,7 +136,7 @@ class TARGCN_cell(nn.Module):
 
         self.gcn=GCN(dim_in, dim_out, self.adj, cheb_k, embed_dim)
         self.tcn = TemporalConvNet( dim_in, [1, 1, 1], 2, 0.2)
-        # self.TA_layer = TA_layer(dim_out, dim_out, 2, 2)
+        self.TA_layer = TA_layer(dim_out, dim_out, 2, 2)
 
     def forward(self, x, node_embeddings):
 
@@ -147,18 +147,15 @@ class TARGCN_cell(nn.Module):
         TA_input = x
         tcn_input = x  # b*n d t
         # tcn_input = x
-        # TA_output = self.TA_layer(TA_input)
+        TA_output = self.TA_layer(TA_input)
         tcn_output = self.tcn(x.permute(0, 2, 3, 1).reshape(b * n, d, t)).reshape(b, n, d, t).permute(0, 3, 1, 2)+x
-        # x_gconv_TA=self.gcn(TA_output, node_embeddings)
-        # x_gconv_TA=self.gcn(x_gconv_TA, node_embeddings)
+        x_gconv_TA=self.gcn(TA_output, node_embeddings)
+        x_gconv_TA=self.gcn(x_gconv_TA, node_embeddings)
 
         x_gconv_tcn=self.gcn(tcn_output, node_embeddings)
         x_gconv_tcn=self.gcn(x_gconv_tcn, node_embeddings)
 
-        b, t, n, d = x_gconv_tcn.shape
-        tcn_output2 = self.tcn(x_gconv_tcn.permute(0, 2, 3, 1).reshape(b * n, d, t)).reshape(b, n, d, t).permute(0, 3, 1, 2)+x
-        x_gconv_tcn2 = self.gcn(tcn_output2, node_embeddings)
-        x_gconv_tcn2 = self.gcn(x_gconv_tcn2, node_embeddings)
+
         # current_inputs = x
         # output_hidden = []
         # for i in range(self.num_layers):
@@ -174,8 +171,8 @@ class TARGCN_cell(nn.Module):
         #last_state: (B, N, hidden_dim)
         # current_inputs=self.TA_layer(current_inputs)
         # return current_inputs, output_hidden
-        # return x_gconv_TA+x_gconv_tcn
-        return x_gconv_tcn2
+        return x_gconv_TA+x_gconv_tcn
+        # return x_gconv_tcn
         # return tcn_output
 
     # def init_hidden(self, batch_size):
