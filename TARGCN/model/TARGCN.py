@@ -155,6 +155,7 @@ class TARGCN_cell(nn.Module):
         x_gconv_tcn=self.gcn(tcn_output, node_embeddings)
         x_gconv_tcn=self.gcn(x_gconv_tcn, node_embeddings)
 
+        b, t, n, d = x_gconv_tcn.shape
         tcn_output2 = self.tcn(x_gconv_tcn.permute(0, 2, 3, 1).reshape(b * n, d, t)).reshape(b, n, d, t).permute(0, 3, 1, 2)+x
         x_gconv_tcn2 = self.gcn(tcn_output2, node_embeddings)
         x_gconv_tcn2 = self.gcn(x_gconv_tcn2, node_embeddings)
