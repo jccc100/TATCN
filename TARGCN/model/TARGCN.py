@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.nn.utils import weight_norm
 from model.GRU import GRU
 from model.temporal_attention_layer import TA_layer
-from model.EmbGCN import EmbGCN_SA as GCN
+from model.EmbGCN import EmbGCN as GCN
 from torch.autograd import Variable
 import math
 device=torch.device('cuda')
@@ -144,19 +144,17 @@ class TARGCN_cell(nn.Module):
         seq_length = x.shape[1]
         b, t, n, d = x.shape
         x = x.to(device=device)
-        TA_input = x
-        tcn_input = x  # b*n d t
+        input = x
+        # tcn_input = x  # b*n d t
         # tcn_input = x
-        input= self.gcn(x, node_embeddings)
-        input= self.gcn(input, node_embeddings)
 
         TA_output = self.TA_layer(input)
         tcn_output = self.tcn(input.permute(0, 2, 3, 1).reshape(b * n, d, t)).reshape(b, n, d, t).permute(0, 3, 1, 2)
-        # x_gconv_TA = self.gcn(TA_output, node_embeddings)
-        # x_gconv_TA = self.gcn(x_gconv_TA, node_embeddings)
+        x_gconv_TA = self.gcn(TA_output, node_embeddings)
+        x_gconv_TA = self.gcn(x_gconv_TA, node_embeddings)
 
-        # x_gconv_tcn = self.gcn(tcn_output, node_embeddings)
-        # x_gconv_tcn = self.gcn(x_gconv_tcn, node_embeddings)
+        x_gconv_tcn = self.gcn(tcn_output, node_embeddings)
+        x_gconv_tcn = self.gcn(x_gconv_tcn, node_embeddings)
 
 
 
@@ -175,8 +173,7 @@ class TARGCN_cell(nn.Module):
         #last_state: (B, N, hidden_dim)
         # current_inputs=self.TA_layer(current_inputs)
         # return current_inputs, output_hidden
-        return TA_output+tcn_output
-        # return x_gconv_tcn
+        return x_gconv_tcn+x_gconv_TA
         # return tcn_output
 
     # def init_hidden(self, batch_size):
