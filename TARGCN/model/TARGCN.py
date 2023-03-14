@@ -76,7 +76,7 @@ class TemporalBlock(nn.Module):
 
 
 class TemporalConvNet(nn.Module):
-    def __init__(self, dim_in,dim_out, cheb_k, embed_dim, adj,num_inputs, num_channels, kernel_size=2, dropout=0.2):
+    def __init__(self, num_inputs, num_channels, kernel_size=2, dropout=0.2):
         """
         TCN，目前paper给出的TCN结构很好的支持每个时刻为一个数的情况，即sequence结构，
         对于每个时刻为一个向量这种一维结构，勉强可以把向量拆成若干该时刻的输入通道，
@@ -90,7 +90,7 @@ class TemporalConvNet(nn.Module):
         super(TemporalConvNet, self).__init__()
         layers = []
         num_levels = len(num_channels)
-        self.gcn=GCN(dim_in, dim_out, adj, cheb_k, embed_dim)
+        # self.gcn=GCN(dim_in, dim_out, adj, cheb_k, embed_dim)
         for i in range(num_levels):
             dilation_size = 2 ** i  # 膨胀系数：1，2，4，8……
             in_channels = num_inputs if i == 0 else num_channels[i - 1]  # 确定每一层的输入通道数
@@ -100,7 +100,7 @@ class TemporalConvNet(nn.Module):
 
         self.network = nn.Sequential(*layers)
 
-    def forward(self, x,node_embeddings):
+    def forward(self, x):
         """
         输入x的结构不同于RNN，一般RNN的size为(Batch, seq_len, channels)或者(seq_len, Batch, channels)，
         这里把seq_len放在channels后面，把所有时间步的数据拼起来，当做Conv1d的输入尺寸，实现卷积跨时间步的操作，
@@ -109,15 +109,15 @@ class TemporalConvNet(nn.Module):
         :param x: size of (Batch, input_channel, seq_len)
         :return: size of (Batch, output_channel, seq_len)
         """
-        b, t, n, d = x.shape
-        out1=self.network[0](x.permute(0, 2, 3, 1).reshape(b * n, d, t))
-        out1=self.gcn(out1.reshape(b, n, d, t).permute(0, 3, 1, 2),node_embeddings) # btnd
-        out2=self.network[1](out1.permute(0, 2, 3, 1).reshape(b * n, d, t))
-        out2 = self.gcn(out2.reshape(b, n, d, t).permute(0, 3, 1, 2),node_embeddings)  # btnd
-        out3 = self.network[1](out2.permute(0, 2, 3, 1).reshape(b * n, d, t))
-        out3 = self.gcn(out3.reshape(b, n, d, t).permute(0, 3, 1, 2),node_embeddings)  # btnd
-        return out3
-        # return self.network(x)
+        # b, t, n, d = x.shape
+        # out1=self.network[0](x.permute(0, 2, 3, 1).reshape(b * n, d, t))
+        # out1=self.gcn(out1.reshape(b, n, d, t).permute(0, 3, 1, 2),node_embeddings) # btnd
+        # out2=self.network[1](out1.permute(0, 2, 3, 1).reshape(b * n, d, t))
+        # out2 = self.gcn(out2.reshape(b, n, d, t).permute(0, 3, 1, 2),node_embeddings)  # btnd
+        # out3 = self.network[1](out2.permute(0, 2, 3, 1).reshape(b * n, d, t))
+        # out3 = self.gcn(out3.reshape(b, n, d, t).permute(0, 3, 1, 2),node_embeddings)  # btnd
+        # return out3
+        return self.network(x)
 
 class TARGCN_cell(nn.Module):
     def __init__(self, node_num, dim_in, dim_out, cheb_k, embed_dim, adj,num_layers=1):
@@ -135,7 +135,7 @@ class TARGCN_cell(nn.Module):
         #     self.dcrnn_cells.append(GRU(node_num, dim_out, dim_out,self.adj ,cheb_k, embed_dim))
 
         self.gcn=GCN(dim_in, dim_out, self.adj, cheb_k, embed_dim)
-        self.tcn = TemporalConvNet(dim_in,dim_out, cheb_k, embed_dim, adj,dim_in, [1, 1, 1], 2, 0.2)
+        self.tcn = TemporalConvNet( dim_in, [1, 1, 1], 2, 0.2)
         # self.TA_layer = TA_layer(dim_out, dim_out, 2, 2)
 
     def forward(self, x, node_embeddings):
@@ -148,12 +148,12 @@ class TARGCN_cell(nn.Module):
         # tcn_input = x.permute(0, 2, 3, 1).reshape(b * n, d, t)  # b*n d t
         tcn_input = x
         # TA_output = self.TA_layer(TA_input)
-        tcn_output = self.tcn(tcn_input,node_embeddings) #.reshape(b, n, d, t).permute(0, 3, 1, 2)
+        tcn_output = self.tcn(tcn_input) #.reshape(b, n, d, t).permute(0, 3, 1, 2)
         # x_gconv_TA=self.gcn(TA_output, node_embeddings)
         # x_gconv_TA=self.gcn(x_gconv_TA, node_embeddings)
 
-        # x_gconv_tcn=self.gcn(tcn_output, node_embeddings)
-        # x_gconv_tcn=self.gcn(x_gconv_tcn, node_embeddings)
+        x_gconv_tcn=self.gcn(tcn_output, node_embeddings)
+        x_gconv_tcn=self.gcn(x_gconv_tcn, node_embeddings)
         # current_inputs = x
         # output_hidden = []
         # for i in range(self.num_layers):
@@ -170,8 +170,8 @@ class TARGCN_cell(nn.Module):
         # current_inputs=self.TA_layer(current_inputs)
         # return current_inputs, output_hidden
         # return x_gconv_TA+x_gconv_tcn
-        # return x_gconv_tcn
-        return tcn_output
+        return x_gconv_tcn
+        # return tcn_output
 
     # def init_hidden(self, batch_size):
     #     init_states = []
