@@ -145,15 +145,19 @@ class TARGCN_cell(nn.Module):
         b, t, n, d = x.shape
         x = x.to(device=device)
         TA_input = x
-        tcn_input = x.permute(0, 2, 3, 1).reshape(b * n, d, t)  # b*n d t
+        tcn_input = x  # b*n d t
         # tcn_input = x
         # TA_output = self.TA_layer(TA_input)
-        tcn_output = self.tcn(tcn_input).reshape(b, n, d, t).permute(0, 3, 1, 2)
+        tcn_output = self.tcn(x.permute(0, 2, 3, 1).reshape(b * n, d, t)).reshape(b, n, d, t).permute(0, 3, 1, 2)+x
         # x_gconv_TA=self.gcn(TA_output, node_embeddings)
         # x_gconv_TA=self.gcn(x_gconv_TA, node_embeddings)
 
         x_gconv_tcn=self.gcn(tcn_output, node_embeddings)
         x_gconv_tcn=self.gcn(x_gconv_tcn, node_embeddings)
+
+        tcn_output2 = self.tcn(x_gconv_tcn.permute(0, 2, 3, 1).reshape(b * n, d, t)).reshape(b, n, d, t).permute(0, 3, 1, 2)+x
+        x_gconv_tcn2 = self.gcn(tcn_output2, node_embeddings)
+        x_gconv_tcn2 = self.gcn(x_gconv_tcn2, node_embeddings)
         # current_inputs = x
         # output_hidden = []
         # for i in range(self.num_layers):
@@ -170,7 +174,7 @@ class TARGCN_cell(nn.Module):
         # current_inputs=self.TA_layer(current_inputs)
         # return current_inputs, output_hidden
         # return x_gconv_TA+x_gconv_tcn
-        return x_gconv_tcn
+        return x_gconv_tcn2
         # return tcn_output
 
     # def init_hidden(self, batch_size):
