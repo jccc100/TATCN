@@ -111,11 +111,11 @@ class TemporalConvNet(nn.Module):
         """
         b, t, n, d = x.shape
         out1=self.network[0](x.permute(0, 2, 3, 1).reshape(b * n, d, t))
-        out1=self.GCN(out1.reshape(b, n, d, t).permute(0, 3, 1, 2)) # btnd
+        out1=self.gcn(out1.reshape(b, n, d, t).permute(0, 3, 1, 2)) # btnd
         out2=self.network[1](out1.permute(0, 2, 3, 1).reshape(b * n, d, t))
-        out2 = self.GCN(out2.reshape(b, n, d, t).permute(0, 3, 1, 2))  # btnd
+        out2 = self.gcn(out2.reshape(b, n, d, t).permute(0, 3, 1, 2))  # btnd
         out3 = self.network[1](out2.permute(0, 2, 3, 1).reshape(b * n, d, t))
-        out3 = self.GCN(out3.reshape(b, n, d, t).permute(0, 3, 1, 2))  # btnd
+        out3 = self.gcn(out3.reshape(b, n, d, t).permute(0, 3, 1, 2))  # btnd
         return out3
         # return self.network(x)
 
