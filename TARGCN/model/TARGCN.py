@@ -127,7 +127,7 @@ class TARGCN_cell(nn.Module):
         #     self.dcrnn_cells.append(GRU(node_num, dim_out, dim_out,self.adj ,cheb_k, embed_dim))
 
         self.gcn=GCN(dim_in, dim_out, self.adj, cheb_k, embed_dim)
-        self.tcn = TemporalConvNet(dim_in, [1, 1, 1], 3, 0.2)
+        self.tcn = TemporalConvNet(dim_in, [8, 8, 8], 2, 0.2)
         self.TA_layer = TA_layer(dim_out, dim_out, 2, 2)
 
     def forward(self, x, node_embeddings):
@@ -138,10 +138,10 @@ class TARGCN_cell(nn.Module):
         x = x.to(device=device)
         TA_input = x
         tcn_input = x.permute(0, 2, 3, 1).reshape(b * n, d, t)  # b*n d t
-        TA_output = self.TA_layer(TA_input)
+        # TA_output = self.TA_layer(TA_input)
         tcn_output = self.tcn(tcn_input).reshape(b, n, d, t).permute(0, 3, 1, 2)
-        x_gconv_TA=self.gcn(TA_output, node_embeddings)
-        x_gconv_TA=self.gcn(x_gconv_TA, node_embeddings)
+        # x_gconv_TA=self.gcn(TA_output, node_embeddings)
+        # x_gconv_TA=self.gcn(x_gconv_TA, node_embeddings)
 
         x_gconv_tcn=self.gcn(tcn_output, node_embeddings)
         x_gconv_tcn=self.gcn(x_gconv_tcn, node_embeddings)
