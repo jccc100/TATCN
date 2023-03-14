@@ -147,13 +147,16 @@ class TARGCN_cell(nn.Module):
         TA_input = x
         tcn_input = x  # b*n d t
         # tcn_input = x
-        TA_output = self.TA_layer(TA_input)
-        tcn_output = self.tcn(x.permute(0, 2, 3, 1).reshape(b * n, d, t)).reshape(b, n, d, t).permute(0, 3, 1, 2)+x
-        x_gconv_TA=self.gcn(TA_output, node_embeddings)
-        x_gconv_TA=self.gcn(x_gconv_TA, node_embeddings)
+        for i in range(self.num_layers):
+            TA_output = self.TA_layer(x)
+            tcn_output = self.tcn(x.permute(0, 2, 3, 1).reshape(b * n, d, t)).reshape(b, n, d, t).permute(0, 3, 1, 2)+x
+            x_gconv_TA=self.gcn(TA_output, node_embeddings)
+            x_gconv_TA=self.gcn(x_gconv_TA, node_embeddings)
 
-        x_gconv_tcn=self.gcn(tcn_output, node_embeddings)
-        x_gconv_tcn=self.gcn(x_gconv_tcn, node_embeddings)
+            x_gconv_tcn=self.gcn(tcn_output, node_embeddings)
+            x_gconv_tcn=self.gcn(x_gconv_tcn, node_embeddings)
+
+            x=x_gconv_TA+x_gconv_tcn+x
 
 
         # current_inputs = x
@@ -171,7 +174,8 @@ class TARGCN_cell(nn.Module):
         #last_state: (B, N, hidden_dim)
         # current_inputs=self.TA_layer(current_inputs)
         # return current_inputs, output_hidden
-        return x_gconv_TA+x_gconv_tcn
+        # return x_gconv_TA+x_gconv_tcn
+        return x
         # return x_gconv_tcn
         # return tcn_output
 
@@ -189,7 +193,6 @@ class TARGCN(nn.Module):
         self.hidden_dim = args.rnn_units
         self.output_dim = args.output_dim
         self.horizon = args.horizon
-        # self.num_layers = args.num_layers
         self.num_layers = args.num_layers
         self.adj=adj
         # self.default_graph = args.default_graph
