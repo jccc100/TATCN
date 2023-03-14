@@ -127,7 +127,7 @@ class TARGCN_cell(nn.Module):
         #     self.dcrnn_cells.append(GRU(node_num, dim_out, dim_out,self.adj ,cheb_k, embed_dim))
 
         self.gcn=GCN(dim_in, dim_out, self.adj, cheb_k, embed_dim)
-        self.tcn = TemporalConvNet(dim_in, [8, 8, 8], 2, 0.2)
+        self.tcn = TemporalConvNet(dim_in, [1, 1, 1], 2, 0.2)
         self.TA_layer = TA_layer(dim_out, dim_out, 2, 2)
 
     def forward(self, x, node_embeddings):
