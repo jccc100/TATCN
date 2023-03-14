@@ -100,7 +100,7 @@ class TemporalConvNet(nn.Module):
 
         self.network = nn.Sequential(*layers)
 
-    def forward(self, x):
+    def forward(self, x,node_embeddings):
         """
         输入x的结构不同于RNN，一般RNN的size为(Batch, seq_len, channels)或者(seq_len, Batch, channels)，
         这里把seq_len放在channels后面，把所有时间步的数据拼起来，当做Conv1d的输入尺寸，实现卷积跨时间步的操作，
@@ -148,7 +148,7 @@ class TARGCN_cell(nn.Module):
         # tcn_input = x.permute(0, 2, 3, 1).reshape(b * n, d, t)  # b*n d t
         tcn_input = x
         # TA_output = self.TA_layer(TA_input)
-        tcn_output = self.tcn(tcn_input) #.reshape(b, n, d, t).permute(0, 3, 1, 2)
+        tcn_output = self.tcn(tcn_input,node_embeddings) #.reshape(b, n, d, t).permute(0, 3, 1, 2)
         # x_gconv_TA=self.gcn(TA_output, node_embeddings)
         # x_gconv_TA=self.gcn(x_gconv_TA, node_embeddings)
 
