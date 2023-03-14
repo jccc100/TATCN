@@ -39,7 +39,7 @@ class Spatial_Attention_layer(nn.Module):
         :param x: (batch_size, N, C)
         :return: (batch_size, N, C)
         '''
-        batch_size, num_of_vertices, in_channels = x.shape
+        # batch_size, num_of_vertices, in_channels = x.shape
 
         Q=self.Wq(x)
         K=self.Wk(x)
