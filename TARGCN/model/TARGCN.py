@@ -160,7 +160,8 @@ class TARGCN_cell(nn.Module):
         #last_state: (B, N, hidden_dim)
         # current_inputs=self.TA_layer(current_inputs)
         # return current_inputs, output_hidden
-        return x_gconv_TA+x_gconv_tcn
+        # return x_gconv_TA+x_gconv_tcn
+        return x_gconv_tcn
 
     # def init_hidden(self, batch_size):
     #     init_states = []
