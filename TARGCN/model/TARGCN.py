@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.nn.utils import weight_norm
 from model.GRU import GRU
 from model.temporal_attention_layer import TA_layer
-from model.EmbGCN_SA import EmbGCN as GCN
+from model.EmbGCN import EmbGCN_SA as GCN
 from torch.autograd import Variable
 import math
 device=torch.device('cuda')
