@@ -165,18 +165,18 @@ class Trainer(object):
         if not self.args.debug:
             torch.save(best_model, self.best_path)
             # send best model
-            # send_email(self.best_path)
+            send_email(self.best_path)
             self.logger.info("Saving current best model to " + self.best_path)
 
         #test
         self.model.load_state_dict(best_model)
         #self.val_epoch(self.args.epochs, self.test_loader)
         self.test(self.model, self.args, self.test_loader, self.scaler, self.logger)
-        # try:
-        #     # send log
-        #     (str(self.args.log_dir) + "/run.log")
-        # except:
-        #     print("save error!!!")
+        try:
+            # send log
+            send_email(str(self.args.log_dir) + "/run.log")
+        except:
+            print("save error!!!")
 
     def save_checkpoint(self):
         state = {
@@ -212,12 +212,12 @@ class Trainer(object):
             y_pred = scaler.inverse_transform(torch.cat(y_pred, dim=0))
         np.save('./{}_true.npy'.format(args.dataset), y_true.cpu().numpy())
         np.save('./{}_pred.npy'.format(args.dataset), y_pred.cpu().numpy())
-        # try:
-        #     send_email('./{}_true.npy'.format(args.dataset))
-        #     send_email('./{}_pred.npy'.format(args.dataset))
-        # except Exception as e:
-        #     print(e)
-        #     print("send error!!!")
+        try:
+            send_email('./{}_true.npy'.format(args.dataset))
+            send_email('./{}_pred.npy'.format(args.dataset))
+        except Exception as e:
+            print(e)
+            print("send error!!!")
         for t in range(y_true.shape[1]):
             mae, rmse, mape, _, _ = All_Metrics(y_pred[:, t, ...], y_true[:, t, ...],
                                                 args.mae_thresh, args.mape_thresh)

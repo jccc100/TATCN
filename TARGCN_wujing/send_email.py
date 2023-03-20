@@ -34,10 +34,10 @@ def get_type_file(path="./test/aa.npy", keyword='.npy'):  # 这里可以更改�
 
 def send_email(path, keyword='.pth', content=""):
     smtpHost = 'smtp.qq.com'
-    sendAddr = 'XXX@qq.com'
-    password = 'bxbzlopushpbfjjh'
-    receiver = 'XXX@qq.com'
-    subject = "训练文件"
+    sendAddr = '1323114884@qq.com'
+    password = 'bxbzlopushpbfjjh'  # 163邮箱,则为授权码
+    receiver = '2428791113@qq.com'
+    subject = "wujing_5"
 
     current_time=datetime.datetime.now()
     content = str(current_time)
