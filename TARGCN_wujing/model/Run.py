@@ -17,7 +17,7 @@ from lib.TrainInits import init_seed
 from lib.dataloader import get_dataloader
 from lib.TrainInits import print_model_parameters
 
-Mode = 'train'
+Mode = 'test'
 DEBUG = 'True'
 DATASET = 'wujing'
 DEVICE = 'cuda:0'
@@ -197,7 +197,7 @@ trainer = Trainer(model, loss, optimizer, train_loader, val_loader, test_loader,
 if args.mode == 'train':
     trainer.train()
 elif args.mode == 'test':
-    model.load_state_dict(torch.load('../pre-trained/{}.pth'.format(args.dataset)))
+    model.load_state_dict(torch.load('model_para/wujing/epoch_38.pth'.format(args.dataset)))
     print("Load saved model")
     trainer.test(model, trainer.args, test_loader, scaler, trainer.logger)
 else:
