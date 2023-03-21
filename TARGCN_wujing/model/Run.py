@@ -17,7 +17,7 @@ from lib.TrainInits import init_seed
 from lib.dataloader import get_dataloader
 from lib.TrainInits import print_model_parameters
 
-Mode = 'test'
+Mode = 'train'
 DEBUG = 'True'
 DATASET = 'wujing'
 DEVICE = 'cuda:0'
