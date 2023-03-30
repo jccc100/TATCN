@@ -253,10 +253,10 @@ class TARGCN_cell(nn.Module):
         TA_output = self.TA_layer(input)
         tcn_output = self.tcn(input)
         x_gconv_TA = self.gcn(TA_output, node_embeddings1,node_embeddings2)
-        x_gconv_TA = self.gcn(x_gconv_TA, node_embeddings1,node_embeddings2)
+        # x_gconv_TA = self.gcn(x_gconv_TA, node_embeddings1,node_embeddings2)
 
         x_gconv_tcn = self.gcn(tcn_output, node_embeddings1,node_embeddings2)
-        x_gconv_tcn = self.gcn(x_gconv_tcn, node_embeddings1,node_embeddings2)
+        # x_gconv_tcn = self.gcn(x_gconv_tcn, node_embeddings1,node_embeddings2)
 
 
 

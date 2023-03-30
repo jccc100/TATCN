@@ -45,9 +45,6 @@ class Spatial_Attention_layer(nn.Module):
         '''
         # batch_size, num_of_vertices, in_channels = x.shape
         b,t,n,c=x.shape
-        Q = x
-        K = x
-        V = x
         # Q=self.Wq(x.reshape(b*t*n,c)).reshape(b,t,n,c)
         # K=self.Wk(x.reshape(b*t*n,c)).reshape(b,t,n,c)
         # V=self.Wv(x.reshape(b*t*n,c)).reshape(b,t,n,c)
@@ -55,7 +52,9 @@ class Spatial_Attention_layer(nn.Module):
         # K=self.conv2(x.permute(0,3,2,1)).permute(0,3,2,1)
         # # V=self.vff(x.permute(0,3,2,1)).permute(0,3,2,1)
         # V=x
-
+        Q=x
+        K=x
+        V=x
         score = torch.matmul(Q, K.transpose(2, 3))
         score=F.softmax(score,dim=1)
         # score=torch.einsum('btnm,mc->btnc',score,adj)
@@ -75,9 +74,6 @@ class EmbGCN(nn.Module):
         self.weights_pool = nn.Parameter(torch.FloatTensor(embed_dim, dim_in, dim_out))
         self.bias_pool = nn.Parameter(torch.FloatTensor(embed_dim, dim_out))
 
-        self.alpha=nn.Parameter(torch.FloatTensor([0.9]),requires_grad=True)
-        self.beta=nn.Parameter(torch.FloatTensor([0.9]),requires_grad=True)
-        self.gamma=nn.Parameter(torch.FloatTensor([0.1]),requires_grad=True)
     def forward(self, x, node_embeddings1,node_embeddings2):
         #x shaped[B,T, N, C], node_embeddings shaped [N, D] -> supports shaped [N, N]
         #output shape [B, T,N, C]
@@ -89,7 +85,6 @@ class EmbGCN(nn.Module):
         #static
         x_static = torch.einsum("nm,btmc->btnc",torch.softmax(self.sym_norm_Adj_matrix,dim=-1),x)
         # x_static = self.linear(x_static) # btnc
-        # x_static = F.relu(x_static)
 
         #spatial attention
         x_sa = F.relu(self.SA(x, self.sym_norm_Adj_matrix))
@@ -100,8 +95,7 @@ class EmbGCN(nn.Module):
         x_g = torch.einsum("nm,btmc->btnc", supports, x)      #B, cheb_k, N, dim_in
 
         x_gconv = torch.einsum('btni,nio->btno', x_g, weights) + bias     #b, N, dim_out
-        # return x_gconv+torch.sigmoid(x_static)*x_static+x_sa
-        return self.alpha*x_gconv+self.beta*x_sa+self.gamma*x_static
+        return x_gconv+torch.sigmoid(x_static)*x_static+x_sa
         # return x_gconv
 
 class EmbGCN_noGate(nn.Module):
