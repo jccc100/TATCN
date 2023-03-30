@@ -53,7 +53,9 @@ class Spatial_Attention_layer(nn.Module):
 class EmbGCN(nn.Module):
     def __init__(self, dim_in, dim_out, adj,cheb_k, embed_dim):
         super(EmbGCN, self).__init__()
+
         self.cheb_k = cheb_k
+
         self.sym_norm_Adj_matrix = torch.from_numpy(sym_norm_Adj(adj)).to(torch.float32).to(torch.device('cuda'))
         self.sym_norm_Adj_matrix=F.softmax(self.sym_norm_Adj_matrix)
         self.linear=nn.Linear(dim_in, dim_out,bias=True)

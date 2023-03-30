@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
 from torch.nn.utils import weight_norm
-from model.GRU import GRU
+# from model.GRU import GRU
+
 from model.temporal_attention_layer import TA_layer
 from model.EmbGCN import EmbGCN as GCN
 from torch.autograd import Variable
@@ -18,9 +19,6 @@ class Chomp1d(nn.Module):
         其实这就是一个裁剪的模块，裁剪多出来的padding
         """
         return x[:, :, :-self.chomp_size].contiguous()
-
-
-
 class TemporalBlock(nn.Module):
     def __init__(self, n_inputs, n_outputs, kernel_size, stride, dilation, padding, dropout=0.2):
         """
@@ -73,8 +71,6 @@ class TemporalBlock(nn.Module):
         out = self.net(x) # 残差
         res = x if self.downsample is None else self.downsample(x)
         return self.relu(out + res)
-
-
 class TemporalConvNet(nn.Module):
     def __init__(self, num_inputs, num_channels, kernel_size=2, dropout=0.2):
         """
@@ -119,9 +115,178 @@ class TemporalConvNet(nn.Module):
         # return out3
         return self.network(x)
 
+
+class TCNLayer(nn.Module):
+    def __init__(self, in_features, out_features, kernel=3, dropout=0.5):
+        super(TCNLayer, self).__init__()
+        self.conv1 = nn.Conv2d(in_features, out_features,
+                               kernel_size=(1, kernel))
+        self.conv2 = nn.Conv2d(in_features, out_features,
+                               kernel_size=(1, kernel))
+        self.conv3 = nn.Conv2d(in_features, out_features,
+                               kernel_size=(1, kernel))
+        self.bn = nn.BatchNorm2d(out_features)
+        self.dropout = dropout
+
+    def forward(self, inputs):
+        """
+        param inputs: (batch_size, timestamp, num_node, in_features)
+        return: (batch_size, timestamp - 2, num_node, out_features)
+        """
+        inputs = inputs.permute(0, 3, 2, 1)  # (btnf->bfnt)
+        out = torch.relu(self.conv1(inputs)) * \
+            torch.sigmoid(self.conv2(inputs))
+        #out = torch.relu(out + self.conv3(inputs))
+        out = self.bn(out)
+        out = out.permute(0, 3, 2, 1)
+        out = torch.dropout(out, p=self.dropout, train=self.training)
+        return out
+
+
+class TCN(nn.Module):
+    def __init__(self, n_history, in_features, mid_features) -> None:
+        super(TCN, self).__init__()
+        # odd time seriers: number of layer is n_hitory // 2
+        # even time seriers: number of layer is n_history//2-1 + a single conv layer.
+        # -> Aggregate information from time seriers to one unit
+        assert(n_history >= 3)
+        self.is_even = False if n_history % 2 != 0 else True
+
+        self.n_layers = n_history // \
+            2 if n_history % 2 != 0 else (n_history // 2 - 1)
+
+        self.tcn_layers = nn.ModuleList([TCNLayer(in_features, mid_features)])
+        for i in range(self.n_layers - 1):
+            self.tcn_layers.append(TCNLayer(mid_features, mid_features))
+
+        if self.is_even:
+            self.tcn_layers.append(
+                TCNLayer(mid_features, mid_features, kernel=2))
+
+        self.upsample = None if in_features == mid_features else nn.Conv2d(
+            in_features, mid_features, kernel_size=1)
+
+    def forward(self, inputs):
+        out = self.tcn_layers[0](inputs)
+        if self.upsample:
+            ResConn = self.upsample(inputs.permute(0, 3, 2, 1))
+            ResConn = ResConn.permute(0, 3, 2, 1)
+        else:
+            ResConn = inputs
+
+        out = out + ResConn[:, 2:, ...]
+
+        for i in range(1, self.n_layers):
+            out = self.tcn_layers[i](
+                out) + out[:, 2:, ...] + ResConn[:, 2 * (i+1):, ...]
+
+        if self.is_even:
+            out = self.tcn_layers[-1](out) + out[:, -1,
+                                                 :, :].unsqueeze(1) + ResConn[:, -1:, ...]
+
+        return out
+
+
+class Encoder(nn.Module):
+    def __init__(self, n_history, n_predict, in_features, mid_features,out_features) -> None:
+        super(Encoder, self).__init__()
+        assert(n_history >= 3)
+        self.n_predict = n_predict
+
+        self.tcn = TCN(n_history=n_history,
+                       in_features=in_features, mid_features=mid_features)
+
+        self.fully = nn.Linear(mid_features, mid_features)
+        self.out_linear = nn.Linear(1, n_predict)
+        self.weight = nn.Parameter(
+            torch.FloatTensor(mid_features, out_features))
+        self.bais = nn.Parameter(torch.FloatTensor(out_features))
+        self.reset_parameter()
+
+
+
+    def reset_parameter(self):
+        for param in self.fully.parameters():
+            param.data.normal_()
+
+    def forward(self, inputs):
+        out = self.tcn(inputs) # btnc
+
+        out = out.permute(0, 2, 1, 3)
+        out = out.reshape(out.shape[0], out.shape[1], -1)
+        out = torch.relu(self.fully(out))
+        out = out.reshape(out.shape[0], out.shape[1], 1, -1)
+        out = out.permute(0, 2, 1, 3)
+        out=self.out_linear(out.permute(0,3,2,1))
+        out=torch.relu(torch.matmul(out.permute(0,3,2,1), self.weight) + self.bais)
+        return out
+
 class TARGCN_cell(nn.Module):
     def __init__(self, node_num, dim_in, dim_out, cheb_k, embed_dim, adj,num_layers=1):
         super(TARGCN_cell, self).__init__()
+        assert num_layers >= 1, 'At least one GRU layer in the Encoder.'
+        self.adj=adj
+        self.node_num = node_num
+        self.input_dim = dim_in
+        self.num_layers = num_layers
+
+        # self.dcrnn_cells = nn.ModuleList()
+        # self.dcrnn_cells.append(GRU(node_num, dim_in, dim_out, self.adj,cheb_k, embed_dim))
+        # self.tcn=TemporalConvNet(dim_in,[3],3,0.2)
+        # for _ in range(1, num_layers):
+        #     self.dcrnn_cells.append(GRU(node_num, dim_out, dim_out,self.adj ,cheb_k, embed_dim))
+
+        self.gcn=GCN(dim_in, dim_out, self.adj, cheb_k, embed_dim)
+        self.tcn = Encoder(12,12,1,32,1)
+        self.TA_layer = TA_layer(dim_out, dim_out, 2, 2)
+
+    def forward(self, x, node_embeddings):
+
+        assert x.shape[2] == self.node_num and x.shape[3] == self.input_dim
+        seq_length = x.shape[1]
+        b, t, n, d = x.shape
+        x = x.to(device=device)
+        input = x
+        # tcn_input = x  # b*n d t
+        # tcn_input = x
+
+        TA_output = self.TA_layer(input)
+        tcn_output = self.tcn(input)
+        x_gconv_TA = self.gcn(TA_output, node_embeddings)
+        # x_gconv_TA = self.gcn(x_gconv_TA, node_embeddings)
+
+        x_gconv_tcn = self.gcn(tcn_output, node_embeddings)
+        # x_gconv_tcn = self.gcn(x_gconv_tcn, node_embeddings)
+
+
+
+        # current_inputs = x
+        # output_hidden = []
+        # for i in range(self.num_layers):
+        #     state = init_state[i]
+        #     inner_states = []
+        #     for t in range(seq_length):
+        #         state = self.dcrnn_cells[i](current_inputs[:, t, :, :], state, node_embeddings)
+        #         inner_states.append(state)
+        #     output_hidden.append(state)
+        #     current_inputs = torch.stack(inner_states, dim=1)
+        #current_inputs: the outputs of last layer: (B, T, N, hidden_dim)
+        #output_hidden: the last state for each layer: (num_layers, B, N, hidden_dim)
+        #last_state: (B, N, hidden_dim)
+        # current_inputs=self.TA_layer(current_inputs)
+        # return current_inputs, output_hidden
+        return x_gconv_tcn+x_gconv_TA
+        # return tcn_output
+
+    # def init_hidden(self, batch_size):
+    #     init_states = []
+    #     for i in range(self.num_layers):
+    #         init_states.append(self.dcrnn_cells[i].init_hidden_state(batch_size))
+    #     return torch.stack(init_states, dim=0)      #(num_layers, B, N, hidden_dim)
+
+class TARGCN_cell2(nn.Module):
+    def __init__(self, node_num, dim_in, dim_out, cheb_k, embed_dim, adj,num_layers=1):
+        super(TARGCN_cell2, self).__init__()
         assert num_layers >= 1, 'At least one GRU layer in the Encoder.'
         self.adj=adj
         self.node_num = node_num
@@ -220,6 +385,9 @@ class TARGCN(nn.Module):
         return output
 
 if __name__=='__main__':
+
+
+
     import argparse
     import configparser
     config = configparser.ConfigParser()
@@ -249,10 +417,13 @@ if __name__=='__main__':
     adj = torch.ones((num_node,num_node))
     # print(adj.shape)
     node_embeddings = nn.Parameter(torch.randn(num_node, 2), requires_grad=True)
-    agcrn=AGCRN(args,adj)
+    net = TARGCN(args,adj)
+    net=net.cuda()
+
     # source: B, T_1, N, D
     # target: B, T_2, N, D
     x=torch.randn(32,12,170,1)
     tar=torch.randn(32,12,170,1)
-    out=agcrn(x,tar)
+    out=net(x,tar)
+
     print(out.shape)

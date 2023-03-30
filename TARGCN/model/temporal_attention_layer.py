@@ -36,7 +36,8 @@ class Transform(nn.Module):
 
         self.d = 2
 
-    def forward(self, x,score_his=None):# x : b t n hidden
+    def forward(self, x):# x : b t n hidden
+
         b, t, n, c = x.shape
         # query = self.qff(x)
         # key = self.kff(x)
@@ -55,13 +56,7 @@ class Transform(nn.Module):
         A /= (c ** 0.5)
         A = torch.softmax(A, -1)
 
-        # res attention
-        if score_his is not None:
-            try:
-                A=A+score_his
-            except:
-                pass
-        score_his=A.clone().detach()
+
 
         value = torch.matmul(A, value)
         # value = torch.softmax(value,-2)
@@ -71,7 +66,7 @@ class Transform(nn.Module):
 
         value = self.ln(value)
         x = self.ff(value) + value
-        return self.lnff(x),score_his
+        return self.lnff(x)
 
 
 class PositionalEncoding(nn.Module):
@@ -96,23 +91,18 @@ class PositionalEncoding(nn.Module):
         return x
 
 class TA_layer(nn.Module):
-    def __init__(self,dim_in,dim_out,num_layer,d=2,att_his=False):
+    def __init__(self,dim_in,dim_out,num_layer,d=2):
         super(TA_layer,self).__init__()
         # self.linear1=nn.Linear(dim_in,dim_out)
         self.trans_layers=nn.ModuleList(Transform(dim_out,d) for l in range(num_layer))
         self.PE=PositionalEncoding(dim_out)
         self.num_layer=num_layer
-        self.att_his=att_his
-        if att_his:
-            self.score_his = torch.zeros((64, 170, 12, 12), requires_grad=False).to(device)
+
     def forward(self, x):
         # x=self.linear1(x)
         x=self.PE(x)
         for l in range(self.num_layer):
-            if  self.att_his:
-                x,self.score_his=self.trans_layers[l](x,self.score_his)
-            else:
-                x,_=self.trans_layers[l](x)
+            x=self.trans_layers[l](x)
         return x
 
 if __name__=="__main__":
