@@ -353,7 +353,7 @@ class TARGCN(nn.Module):
         self.num_node = args.num_nodes
         self.input_dim = args.input_dim
         self.hidden_dim = args.rnn_units
-        self.output_dim = args.output_dim
+        self.output_dim = args.output_dim3
         self.horizon = args.horizon
         self.num_layers = args.num_layers
         self.adj=adj
@@ -364,6 +364,9 @@ class TARGCN(nn.Module):
 
         self.encoder = TARGCN_cell(args.num_nodes, args.input_dim, args.rnn_units, args.cheb_k,
                                 args.embed_dim,self.adj, args.num_layers)
+        # self.encoder2 = TARGCN_cell(args.num_nodes, args.input_dim, args.rnn_units, args.cheb_k,
+        #                            args.embed_dim, self.adj, args.num_layers)
+
 
         #predictor
         self.end_conv = nn.Conv2d(6, args.horizon * self.output_dim, kernel_size=(1, self.hidden_dim), bias=True)
@@ -382,6 +385,13 @@ class TARGCN(nn.Module):
 
         output = output.squeeze(-1).reshape(-1, self.horizon, self.output_dim, self.num_node) # b t c n
         output = output.permute(0, 1, 3, 2)                             #B, T(12), N, C
+
+        # output2 = self.encoder2(output, self.node_embeddings1, self.node_embeddings2)  # B, T, N, hidden
+        # output2 = output2[:, -6:, :, :]
+        # output2 = self.end_conv((output2))  # B, T*C, N, 1
+        #
+        # output2 = output2.squeeze(-1).reshape(-1, self.horizon, self.output_dim, self.num_node)  # b t c n
+        # output2 = output2.permute(0, 1, 3, 2)+output
 
         return output
 
