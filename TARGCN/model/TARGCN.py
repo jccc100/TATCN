@@ -240,7 +240,7 @@ class TARGCN_cell(nn.Module):
         self.tcn = Encoder(12,12,1,32,1)
         self.TA_layer = TA_layer(dim_out, dim_out, 2, 2)
 
-    def forward(self, x, node_embeddings):
+    def forward(self, x, node_embeddings1,node_embeddings2):
 
         assert x.shape[2] == self.node_num and x.shape[3] == self.input_dim
         seq_length = x.shape[1]
@@ -252,10 +252,10 @@ class TARGCN_cell(nn.Module):
 
         TA_output = self.TA_layer(input)
         tcn_output = self.tcn(input)
-        x_gconv_TA = self.gcn(TA_output, node_embeddings)
+        x_gconv_TA = self.gcn(TA_output, node_embeddings1,node_embeddings2)
         # x_gconv_TA = self.gcn(x_gconv_TA, node_embeddings)
 
-        x_gconv_tcn = self.gcn(tcn_output, node_embeddings)
+        x_gconv_tcn = self.gcn(tcn_output, node_embeddings1,node_embeddings2)
         # x_gconv_tcn = self.gcn(x_gconv_tcn, node_embeddings)
 
 
@@ -359,7 +359,8 @@ class TARGCN(nn.Module):
         self.adj=adj
         # self.default_graph = args.default_graph
 
-        self.node_embeddings = nn.Parameter(torch.randn(self.num_node, args.embed_dim), requires_grad=True)
+        self.node_embeddings1 = nn.Parameter(torch.randn(self.num_node, args.embed_dim), requires_grad=True)
+        self.node_embeddings2 = nn.Parameter(torch.randn(self.num_node, args.embed_dim), requires_grad=True)
 
         self.encoder = TARGCN_cell(args.num_nodes, args.input_dim, args.rnn_units, args.cheb_k,
                                 args.embed_dim,self.adj, args.num_layers)
@@ -374,7 +375,7 @@ class TARGCN(nn.Module):
         #supports = F.softmax(F.relu(torch.mm(self.nodevec1, self.nodevec1.transpose(0,1))), dim=1)
 
         # init_state = self.encoder.init_hidden(source.shape[0])
-        output = self.encoder(source, self.node_embeddings)      #B, T, N, hidden
+        output = self.encoder(source, self.node_embeddings1,self.node_embeddings2)      #B, T, N, hidden
         output = output[:, -6:, :, :]
         output = self.end_conv((output))                         #B, T*C, N, 1
 

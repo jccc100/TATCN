@@ -27,29 +27,40 @@ class Spatial_Attention_layer(nn.Module):
         global device
         self.in_channels=c_in
         self.dropout = nn.Dropout(p=dropout)
+        # self.vff = nn.Linear(c_out, c_out)
+        # nn.init.kaiming_uniform_(self.vff.weight, nonlinearity="relu")
+        # self.conv1 = nn.Conv2d(c_in, c_out, (1, 3), bias=True,padding=0,padding_mode='zeros')
+        # self.conv2 = nn.Conv2d(c_out, c_out, (1, 3), bias=True,padding=0,padding_mode='zeros')
 
-        self.Wq=nn.Linear(c_in,c_out,bias=True)
+        self.Wq=nn.Linear(c_in,c_out,bias=False)
         # nn.init.kaiming_uniform_(self.Wq.weight, nonlinearity="relu")
-        self.Wk=nn.Linear(c_in,c_out,bias=True)
+        self.Wk=nn.Linear(c_in,c_out,bias=False)
         # nn.init.kaiming_uniform_(self.Wk.weight, nonlinearity="relu")
         self.Wv=nn.Linear(c_in,c_out,bias=False)
         # # nn.init.kaiming_uniform_(self.Wv.weight, nonlinearity="relu")
     def forward(self, x,adj,score_his=None):
         '''
-        :param x: (batch_size, N, C)
-        :return: (batch_size, N, C)
+        :param x: (batch_size,t, N, C)
+        :return: (batch_size, t,N, C)
         '''
         # batch_size, num_of_vertices, in_channels = x.shape
-
-        Q=self.Wq(x)
-        K=self.Wk(x)
-        V=self.Wv(x)
-
-        score = torch.matmul(Q, K.transpose(1, 2))
+        b,t,n,c=x.shape
+        # Q=self.Wq(x.reshape(b*t*n,c)).reshape(b,t,n,c)
+        # K=self.Wk(x.reshape(b*t*n,c)).reshape(b,t,n,c)
+        # V=self.Wv(x.reshape(b*t*n,c)).reshape(b,t,n,c)
+        # Q=self.conv1(x.permute(0,3,2,1)).permute(0,3,2,1)
+        # K=self.conv2(x.permute(0,3,2,1)).permute(0,3,2,1)
+        # # V=self.vff(x.permute(0,3,2,1)).permute(0,3,2,1)
+        # V=x
+        Q=x
+        K=x
+        V=x
+        score = torch.matmul(Q, K.transpose(2, 3))
         score=F.softmax(score,dim=1)
-        score=torch.einsum('bnm,mc->bnc',score,adj)
-        score=torch.einsum("bnm,bmc->bnc",score,V)
-        return score # (b n n)
+        # score=torch.einsum('btnm,mc->btnc',score,adj)
+        score=torch.einsum("btnm,btmc->btnc",score,V)
+        return F.relu(score) # (b n n)
+
 class EmbGCN(nn.Module):
     def __init__(self, dim_in, dim_out, adj,cheb_k, embed_dim):
         super(EmbGCN, self).__init__()
@@ -58,29 +69,34 @@ class EmbGCN(nn.Module):
 
         self.sym_norm_Adj_matrix = torch.from_numpy(sym_norm_Adj(adj)).to(torch.float32).to(torch.device('cuda'))
         self.sym_norm_Adj_matrix=F.softmax(self.sym_norm_Adj_matrix)
+        self.SA = Spatial_Attention_layer(adj.shape[0], dim_in, dim_out)
         self.linear=nn.Linear(dim_in, dim_out,bias=True)
         self.weights_pool = nn.Parameter(torch.FloatTensor(embed_dim, dim_in, dim_out))
         self.bias_pool = nn.Parameter(torch.FloatTensor(embed_dim, dim_out))
-    def forward(self, x, node_embeddings):
+
+    def forward(self, x, node_embeddings1,node_embeddings2):
         #x shaped[B,T, N, C], node_embeddings shaped [N, D] -> supports shaped [N, N]
         #output shape [B, T,N, C]
-        node_num = node_embeddings.shape[0]
-        supports = F.softmax(F.relu(torch.mm(node_embeddings, node_embeddings.transpose(0, 1))), dim=1) # N N
+        node_num = node_embeddings1.shape[0]
+        supports = F.softmax(F.relu(torch.mm(node_embeddings1, node_embeddings2.transpose(0, 1))-
+                                    torch.mm(node_embeddings2, node_embeddings1.transpose(0, 1))), dim=1) # N N
+
         supports = torch.eye(node_num).to(supports.device)+supports
-        #
-        # x_static = torch.einsum("nm,btmc->btnc",torch.softmax(self.sym_norm_Adj_matrix,dim=-1),x)
+        #static
+        x_static = torch.einsum("nm,btmc->btnc",torch.softmax(self.sym_norm_Adj_matrix,dim=-1),x)
         # x_static = self.linear(x_static) # btnc
 
+        #spatial attention
+        x_sa = F.relu(self.SA(x, self.sym_norm_Adj_matrix))
 
-
-        weights = torch.einsum('nd,dio->nio', node_embeddings, self.weights_pool)  #N, cheb_k, dim_in, dim_out
-        bias = torch.matmul(node_embeddings, self.bias_pool)#N, dim_out
+        weights = torch.einsum('nd,dio->nio', node_embeddings1, self.weights_pool)  #N, cheb_k, dim_in, dim_out
+        bias = torch.matmul(node_embeddings1, self.bias_pool)#N, dim_out
 
         x_g = torch.einsum("nm,btmc->btnc", supports, x)      #B, cheb_k, N, dim_in
 
         x_gconv = torch.einsum('btni,nio->btno', x_g, weights) + bias     #b, N, dim_out
-        # return x_gconv+torch.sigmoid(x_static)*x_static
-        return x_gconv
+        return x_gconv+torch.sigmoid(x_static)*x_static+x_sa
+        # return x_gconv
 
 class EmbGCN_noGate(nn.Module):
     def __init__(self, dim_in, dim_out, adj,cheb_k, embed_dim):
@@ -130,9 +146,15 @@ class EmbGCN_SA(nn.Module):
 
 
 if __name__=="__main__":
-    x=torch.randn(64,170,1)
-    adj=torch.randn(170,170)
-    emb=torch.randn(170,2)
+    data=torch.randn((64,12,170,1)).to(device=device)
+    print(data.device)
+    e1=nn.Parameter(torch.FloatTensor(170, 2)).to(device=device)
+    e2=nn.Parameter(torch.FloatTensor(170, 2)).to(device=device)
+    print(e1.device)
+    print(e2.device)
+    adj=torch.randn((170,170)).to(device=device)
+    print(adj.device)
     gcn=EmbGCN(1,1,adj,2,2)
-    out=gcn(x,emb)
+    gcn=gcn.cuda()
+    out=gcn(data,e1,e2)
     print(out.shape)
