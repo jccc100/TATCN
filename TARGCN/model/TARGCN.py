@@ -353,7 +353,7 @@ class TARGCN(nn.Module):
         self.num_node = args.num_nodes
         self.input_dim = args.input_dim
         self.hidden_dim = args.rnn_units
-        self.output_dim = args.output_dim3
+        self.output_dim = args.output_dim
         self.horizon = args.horizon
         self.num_layers = args.num_layers
         self.adj=adj
