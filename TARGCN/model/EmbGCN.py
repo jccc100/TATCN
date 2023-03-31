@@ -82,26 +82,26 @@ class EmbGCN(nn.Module):
         #x shaped[B,T, N, C], node_embeddings shaped [N, D] -> supports shaped [N, N]
         #output shape [B, T,N, C]
         node_num = node_embeddings1.shape[0]
-        supports = F.softmax(F.relu(torch.mm(node_embeddings1, node_embeddings2.transpose(0, 1))-
+        supports = torch.relu(torch.tanh(torch.mm(node_embeddings1, node_embeddings2.transpose(0, 1))-
                                     torch.mm(node_embeddings2, node_embeddings1.transpose(0, 1))), dim=1) # N N
 
         supports = torch.eye(node_num).to(supports.device)+supports
         #static
         x_static = torch.einsum("nm,btmc->btnc",torch.softmax(self.sym_norm_Adj_matrix,dim=-1),x)
-        x_static = torch.einsum("nm,btmc->btnc",torch.softmax(self.sym_norm_Adj_matrix,dim=-1),x_static)
+        # x_static = torch.einsum("nm,btmc->btnc",torch.softmax(self.sym_norm_Adj_matrix,dim=-1),x_static)
         # x_static = self.linear(x_static) # btnc
         x_static = torch.relu(x_static)
 
         #spatial attention
         x_sa = torch.relu(self.SA(x, self.sym_norm_Adj_matrix))
-        x_sa = torch.relu(self.SA(x_sa, self.sym_norm_Adj_matrix))
+        # x_sa = torch.relu(self.SA(x_sa, self.sym_norm_Adj_matrix))
 
         weights = torch.einsum('nd,dio->nio', node_embeddings1, self.weights_pool)  #N, cheb_k, dim_in, dim_out
         bias = torch.matmul(node_embeddings1, self.bias_pool)#N, dim_out
 
         x_g = torch.einsum("nm,btmc->btnc", supports, x)
         x_g = torch.einsum("nm,btmc->btnc", supports, x_g)
-        x_g = torch.einsum("nm,btmc->btnc", supports, x_g)
+        # x_g = torch.einsum("nm,btmc->btnc", supports, x_g)
 
 
         x_gconv = torch.einsum('btni,nio->btno', x_g, weights) + bias     #b, N, dim_out
