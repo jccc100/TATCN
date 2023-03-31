@@ -83,7 +83,7 @@ class EmbGCN(nn.Module):
         #output shape [B, T,N, C]
         node_num = node_embeddings1.shape[0]
         supports = torch.relu(torch.tanh(torch.mm(node_embeddings1, node_embeddings2.transpose(0, 1))-
-                                    torch.mm(node_embeddings2, node_embeddings1.transpose(0, 1))), dim=1) # N N
+                                    torch.mm(node_embeddings2, node_embeddings1.transpose(0, 1)))) # N N
 
         supports = torch.eye(node_num).to(supports.device)+supports
         #static
