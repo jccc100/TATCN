@@ -100,8 +100,6 @@ class EmbGCN(nn.Module):
         bias = torch.matmul(node_embeddings1, self.bias_pool)#N, dim_out
 
         x_g = torch.einsum("nm,btmc->btnc", supports, x)
-        x_g = torch.einsum("nm,btmc->btnc", supports, x_g)
-        # x_g = torch.einsum("nm,btmc->btnc", supports, x_g)
 
 
         x_gconv = torch.einsum('btni,nio->btno', x_g, weights) + bias     #b, N, dim_out

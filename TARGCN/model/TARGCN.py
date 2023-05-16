@@ -275,7 +275,7 @@ class TARGCN_cell(nn.Module):
         #last_state: (B, N, hidden_dim)
         # current_inputs=self.TA_layer(current_inputs)
         # return current_inputs, output_hidden
-        return x_gconv_tcn+x_gconv_TA
+        return x_gconv_tcn#+x_gconv_TA
         # return tcn_output
 
     # def init_hidden(self, batch_size):
@@ -309,17 +309,18 @@ class TARGCN_cell2(nn.Module):
         seq_length = x.shape[1]
         b, t, n, d = x.shape
         x = x.to(device=device)
-        input = x
+        input = self.gcn(x,node_embeddings)
         # tcn_input = x  # b*n d t
         # tcn_input = x
 
+
         TA_output = self.TA_layer(input)
         tcn_output = self.tcn(input.permute(0, 2, 3, 1).reshape(b * n, d, t)).reshape(b, n, d, t).permute(0, 3, 1, 2)
-        x_gconv_TA = self.gcn(TA_output, node_embeddings)
-        x_gconv_TA = self.gcn(x_gconv_TA, node_embeddings)
+        # x_gconv_TA = self.gcn(TA_output, node_embeddings)
+        # x_gconv_TA = self.gcn(x_gconv_TA, node_embeddings)
 
-        x_gconv_tcn = self.gcn(tcn_output, node_embeddings)
-        x_gconv_tcn = self.gcn(x_gconv_tcn, node_embeddings)
+        # x_gconv_tcn = self.gcn(tcn_output, node_embeddings)
+        # x_gconv_tcn = self.gcn(x_gconv_tcn, node_embeddings)
 
 
 
@@ -338,7 +339,8 @@ class TARGCN_cell2(nn.Module):
         #last_state: (B, N, hidden_dim)
         # current_inputs=self.TA_layer(current_inputs)
         # return current_inputs, output_hidden
-        return x_gconv_tcn+x_gconv_TA
+        # return x_gconv_tcn+x_gconv_TA
+        return TA_output+tcn_output
         # return tcn_output
 
     # def init_hidden(self, batch_size):
