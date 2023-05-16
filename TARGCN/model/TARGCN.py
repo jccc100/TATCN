@@ -237,7 +237,7 @@ class TARGCN_cell(nn.Module):
         #     self.dcrnn_cells.append(GRU(node_num, dim_out, dim_out,self.adj ,cheb_k, embed_dim))
 
         self.gcn=GCN(dim_in, dim_out, self.adj, cheb_k, embed_dim)
-        self.tcn = Encoder(12,12,1,32,1)
+        self.tcn = Encoder(12,12,1,64,1)
         self.TA_layer = TA_layer(dim_out, dim_out, 2, 2)
 
     def forward(self, x, node_embeddings1,node_embeddings2):
@@ -257,12 +257,12 @@ class TARGCN_cell(nn.Module):
 
         x_gconv_tcn = self.gcn(tcn_output, node_embeddings1,node_embeddings2)
         # x_gconv_tcn = self.gcn(x_gconv_tcn, node_embeddings1,node_embeddings2)
-        # return x_gconv_tcn+x_gconv_TA
+        return x_gconv_tcn+x_gconv_TA
 
 
-        TA_output = self.TA_layer(x_gconv_tcn+x_gconv_TA)
-        tcn_output = self.tcn(x_gconv_tcn+x_gconv_TA)
-        return TA_output+tcn_output
+        # TA_output = self.TA_layer(x_gconv_tcn+x_gconv_TA)
+        # tcn_output = self.tcn(x_gconv_tcn+x_gconv_TA)
+        # return TA_output+tcn_output
 
 
         # current_inputs = x
