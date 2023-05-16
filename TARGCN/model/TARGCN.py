@@ -256,8 +256,13 @@ class TARGCN_cell(nn.Module):
         # x_gconv_TA = self.gcn(x_gconv_TA, node_embeddings1,node_embeddings2)
 
         x_gconv_tcn = self.gcn(tcn_output, node_embeddings1,node_embeddings2)
-        x_gconv_tcn = self.gcn(x_gconv_tcn, node_embeddings1,node_embeddings2)
+        # x_gconv_tcn = self.gcn(x_gconv_tcn, node_embeddings1,node_embeddings2)
+        # return x_gconv_tcn+x_gconv_TA
 
+
+        TA_output = self.TA_layer(x_gconv_tcn+x_gconv_TA)
+        tcn_output = self.tcn(x_gconv_tcn+x_gconv_TA)
+        return TA_output+tcn_output
 
 
         # current_inputs = x
@@ -275,7 +280,7 @@ class TARGCN_cell(nn.Module):
         #last_state: (B, N, hidden_dim)
         # current_inputs=self.TA_layer(current_inputs)
         # return current_inputs, output_hidden
-        return x_gconv_tcn#+x_gconv_TA
+
         # return tcn_output
 
     # def init_hidden(self, batch_size):
