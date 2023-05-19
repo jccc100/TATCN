@@ -251,15 +251,15 @@ class TCMGCN_cell(nn.Module):
         # tcn_input = x
 
         TA_output = self.TA_layer(input)
-        # tcn_output = self.tcn(input)
+        tcn_output = self.tcn(input)
         x_gconv_TA = self.gcn(TA_output, node_embeddings1,node_embeddings2)
         # x_gconv_TA = self.gcn(x_gconv_TA, node_embeddings1,node_embeddings2)
 
-        # x_gconv_tcn = self.gcn(tcn_output, node_embeddings1,node_embeddings2)
+        x_gconv_tcn = self.gcn(tcn_output, node_embeddings1,node_embeddings2)
         # x_gconv_tcn = self.gcn(x_gconv_tcn, node_embeddings1,node_embeddings2)
-        # return x_gconv_tcn+x_gconv_TA
+        return x_gconv_tcn+x_gconv_TA
         # return x_gconv_TA
-        return self.gcn(self.TA_layer(TA_output), node_embeddings1,node_embeddings2)+x_gconv_TA
+        # return self.gcn(self.TA_layer(TA_output), node_embeddings1,node_embeddings2)+x_gconv_TA
 
 
         # TA_output = self.TA_layer(x_gconv_tcn+x_gconv_TA)
