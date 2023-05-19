@@ -11,7 +11,7 @@ import torch.nn as nn
 import argparse
 import configparser
 from datetime import datetime
-from model.TARGCN import TARGCN as Network
+from model.TCMGCM import TARGCN as Network
 from model.BasicTrainer import Trainer
 from lib.TrainInits import init_seed
 from lib.dataloader import get_dataloader

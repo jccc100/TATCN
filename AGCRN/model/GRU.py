@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from model.EmbGCN import EmbGCN as GCN
+from model.MGCN import EmbGCN as GCN
 
 # from model.EmbGCN import EmbGCN_linear as GCN
 # from model.EmbGCN import EmbGCN_SA as GCN

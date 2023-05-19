@@ -1,0 +1,51 @@
+2023-05-18 15:28: Experiment log path in: C:\旧电脑文件\毕业相关\第二个模型\TATCN\TARGCN\model\experiments\PEMSD8\20230518152842
+2023-05-18 15:28: Train Epoch 1: 0/167 Loss: 241.456085
+2023-05-18 15:28: Train Epoch 1: 20/167 Loss: 46.802727
+2023-05-18 15:28: Train Epoch 1: 40/167 Loss: 34.389046
+2023-05-18 15:28: Train Epoch 1: 60/167 Loss: 31.549749
+2023-05-18 15:28: Train Epoch 1: 80/167 Loss: 27.519901
+2023-05-18 15:28: Train Epoch 1: 100/167 Loss: 25.832048
+2023-05-18 15:29: Train Epoch 1: 120/167 Loss: 26.475967
+2023-05-18 15:29: Train Epoch 1: 140/167 Loss: 24.400831
+2023-05-18 15:29: Train Epoch 1: 160/167 Loss: 26.304815
+2023-05-18 15:29: **********Train Epoch 1: averaged Loss: 37.915599, tf_ratio: 1.000000
+2023-05-18 15:29: **********Val Epoch 1: average Loss: 25.612084
+2023-05-18 15:29: ******Current best model saved:model_para/PEMSD8/epoch_1.pth!
+2023-05-18 15:29: Train Epoch 2: 0/167 Loss: 23.819180
+2023-05-18 15:29: Train Epoch 2: 20/167 Loss: 25.155485
+2023-05-18 15:29: Train Epoch 2: 40/167 Loss: 24.410049
+2023-05-18 15:29: Train Epoch 2: 60/167 Loss: 24.108641
+2023-05-18 15:29: Train Epoch 2: 80/167 Loss: 25.009836
+2023-05-18 15:29: Train Epoch 2: 100/167 Loss: 24.026041
+2023-05-18 15:29: Train Epoch 2: 120/167 Loss: 24.252750
+2023-05-18 15:29: Train Epoch 2: 140/167 Loss: 24.230265
+2023-05-18 15:29: Train Epoch 2: 160/167 Loss: 23.707159
+2023-05-18 15:29: **********Train Epoch 2: averaged Loss: 24.577736, tf_ratio: 1.000000
+2023-05-18 15:29: **********Val Epoch 2: average Loss: 23.943778
+2023-05-18 15:29: ******Current best model saved:model_para/PEMSD8/epoch_2.pth!
+2023-05-18 15:29: Train Epoch 3: 0/167 Loss: 23.525391
+2023-05-18 15:29: Train Epoch 3: 20/167 Loss: 25.295691
+2023-05-18 15:29: Train Epoch 3: 40/167 Loss: 24.540533
+2023-05-18 15:29: Train Epoch 3: 60/167 Loss: 23.120668
+2023-05-18 15:29: Train Epoch 3: 80/167 Loss: 22.748770
+2023-05-18 15:29: Train Epoch 3: 100/167 Loss: 24.972250
+2023-05-18 15:29: Train Epoch 3: 120/167 Loss: 27.192184
+2023-05-18 15:29: Train Epoch 3: 140/167 Loss: 23.511173
+2023-05-18 15:29: Train Epoch 3: 160/167 Loss: 23.836657
+2023-05-18 15:29: **********Train Epoch 3: averaged Loss: 23.579813, tf_ratio: 1.000000
+2023-05-18 15:29: **********Val Epoch 3: average Loss: 23.104898
+2023-05-18 15:29: ******Current best model saved:model_para/PEMSD8/epoch_3.pth!
+2023-05-18 15:29: Train Epoch 4: 0/167 Loss: 23.088739
+2023-05-18 15:29: Train Epoch 4: 20/167 Loss: 21.689741
+2023-05-18 15:30: Train Epoch 4: 40/167 Loss: 21.476753
+2023-05-18 15:30: Train Epoch 4: 60/167 Loss: 22.244719
+2023-05-18 15:30: Train Epoch 4: 80/167 Loss: 22.690733
+2023-05-18 15:30: Train Epoch 4: 100/167 Loss: 23.441097
+2023-05-18 15:30: Train Epoch 4: 120/167 Loss: 22.311577
+2023-05-18 15:30: Train Epoch 4: 140/167 Loss: 27.015833
+2023-05-18 15:30: Train Epoch 4: 160/167 Loss: 21.216879
+2023-05-18 15:30: **********Train Epoch 4: averaged Loss: 22.609457, tf_ratio: 1.000000
+2023-05-18 15:30: **********Val Epoch 4: average Loss: 22.576459
+2023-05-18 15:30: ******Current best model saved:model_para/PEMSD8/epoch_4.pth!
+2023-05-18 15:30: Train Epoch 5: 0/167 Loss: 22.351656
+2023-05-18 15:30: Train Epoch 5: 20/167 Loss: 23.113060

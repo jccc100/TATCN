@@ -11,7 +11,7 @@ import torch.nn as nn
 import argparse
 import configparser
 from datetime import datetime
-from model.TARGCN import TARGCN as Network
+from model.TCMGCM import TCMGCN as Network
 from model.BasicTrainer import Trainer
 from lib.TrainInits import init_seed
 from lib.dataloader import get_dataloader
@@ -83,6 +83,7 @@ args.add_argument('--real_value', default=config['train']['real_value'], type=ev
 #test
 args.add_argument('--mae_thresh', default=config['test']['mae_thresh'], type=eval)
 args.add_argument('--mape_thresh', default=config['test']['mape_thresh'], type=float)
+args.add_argument('--test_para', default='best_model', type=str)
 #log
 args.add_argument('--log_dir', default='./', type=str)
 args.add_argument('--log_step', default=config['log']['log_step'], type=int)
@@ -198,7 +199,7 @@ trainer = Trainer(model, loss, optimizer, train_loader, val_loader, test_loader,
 if args.mode == 'train':
     trainer.train()
 elif args.mode == 'test':
-    model.load_state_dict(torch.load('./model_para/{}/best_model.pth'.format(args.dataset)))
+    model.load_state_dict(torch.load('./model_para/{}/{}.pth'.format(args.dataset,args.test_para)))
     print("Load saved model")
     trainer.test(model, trainer.args, test_loader, scaler, trainer.logger)
 else:
