@@ -377,7 +377,7 @@ class TCMGCN(nn.Module):
         # self.encoder2 = TCMGCN_cell(args.num_nodes, args.rnn_units, args.rnn_units, args.cheb_k,
         #                             args.embed_dim, self.adj, 64, 64, 1, args.num_layers)
         self.encoder2 = TCMGCN_cell(args.num_nodes, args.rnn_units, args.rnn_units, args.cheb_k,
-                                   args.embed_dim, self.adj, 64,128,1,args.num_layers)
+                                   args.embed_dim, self.adj, 64,64,1,args.num_layers)
         self.encoder3 = TCMGCN_cell(args.num_nodes, args.rnn_units, args.rnn_units, args.cheb_k,
                                     args.embed_dim, self.adj, 64, 64, 1, args.num_layers)
 
