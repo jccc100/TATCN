@@ -25,7 +25,7 @@ DEVICE = 'cuda:0'
 MODEL = 'TARGCN'
 
 #get configuration
-config_file = './{}.conf'.format(DATASET)
+config_file = './config/{}.conf'.format(DATASET)
 config = configparser.ConfigParser()
 config.read(config_file)
 
