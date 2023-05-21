@@ -376,10 +376,10 @@ class TCMGCN(nn.Module):
                                 args.embed_dim,self.adj, 1,64,1,args.num_layers)
         # self.encoder2 = TCMGCN_cell(args.num_nodes, args.rnn_units, args.rnn_units, args.cheb_k,
         #                             args.embed_dim, self.adj, 64, 64, 1, args.num_layers)
-        self.encoder2 = TCMGCN_cell(args.num_nodes, args.rnn_units, 128, args.cheb_k,
+        self.encoder2 = TCMGCN_cell(args.num_nodes, args.rnn_units, args.rnn_units, args.cheb_k,
                                    args.embed_dim, self.adj, 64,128,1,args.num_layers)
-        self.encoder3 = TCMGCN_cell(args.num_nodes, 128, args.rnn_units, args.cheb_k,
-                                    args.embed_dim, self.adj, 128, 64, 1, args.num_layers)
+        self.encoder3 = TCMGCN_cell(args.num_nodes, args.rnn_units, args.rnn_units, args.cheb_k,
+                                    args.embed_dim, self.adj, 64, 64, 1, args.num_layers)
 
         #predictor
         self.end_conv = nn.Conv2d(6, args.horizon * self.output_dim, kernel_size=(1, self.hidden_dim), bias=True)
