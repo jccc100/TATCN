@@ -222,7 +222,7 @@ class Encoder(nn.Module):
         return out
 
 class TCMGCN_cell(nn.Module):
-    def __init__(self, node_num, dim_in, dim_out, cheb_k, embed_dim, adj,num_layers=1):
+    def __init__(self, node_num, dim_in, dim_out, cheb_k, embed_dim, adj,tcn_in,tcn_mid,tcn_out,num_layers=1):
         super(TCMGCN_cell, self).__init__()
         assert num_layers >= 1, 'At least one GRU layer in the Encoder.'
         self.adj=adj
@@ -237,11 +237,11 @@ class TCMGCN_cell(nn.Module):
         #     self.dcrnn_cells.append(GRU(node_num, dim_out, dim_out,self.adj ,cheb_k, embed_dim))
 
         self.gcn=GCN(dim_in, dim_out, self.adj, cheb_k, embed_dim)
-        self.tcn = Encoder(12,12,1,64,1)
+        self.tcn = Encoder(12,12,tcn_in,tcn_mid,tcn_out)
         self.TA_layer = TA_layer(dim_out, dim_out, 2, 2)
 
     def forward(self, x, node_embeddings1,node_embeddings2):
-
+        # print("aaaaaaaaaaaaa",x.shape)
         assert x.shape[2] == self.node_num and x.shape[3] == self.input_dim
         seq_length = x.shape[1]
         b, t, n, d = x.shape
@@ -257,7 +257,8 @@ class TCMGCN_cell(nn.Module):
 
         x_gconv_tcn = self.gcn(tcn_output, node_embeddings1,node_embeddings2)
         # x_gconv_tcn = self.gcn(x_gconv_tcn, node_embeddings1,node_embeddings2)
-        return x_gconv_tcn+x_gconv_TA
+        # print("aaaaaaaaaaaaa", (x_gconv_tcn+x_gconv_TA).shape)
+        return x_gconv_tcn+x_gconv_TA#,node_embeddings1,node_embeddings2
         # return x_gconv_TA
         # return self.gcn(self.TA_layer(TA_output), node_embeddings1,node_embeddings2)+x_gconv_TA
 
@@ -291,70 +292,70 @@ class TCMGCN_cell(nn.Module):
     #         init_states.append(self.dcrnn_cells[i].init_hidden_state(batch_size))
     #     return torch.stack(init_states, dim=0)      #(num_layers, B, N, hidden_dim)
 
-class TARGCN_cell2(nn.Module):
-    def __init__(self, node_num, dim_in, dim_out, cheb_k, embed_dim, adj,num_layers=1):
-        super(TARGCN_cell2, self).__init__()
-        assert num_layers >= 1, 'At least one GRU layer in the Encoder.'
-        self.adj=adj
-        self.node_num = node_num
-        self.input_dim = dim_in
-        self.num_layers = num_layers
-
-        # self.dcrnn_cells = nn.ModuleList()
-        # self.dcrnn_cells.append(GRU(node_num, dim_in, dim_out, self.adj,cheb_k, embed_dim))
-        # self.tcn=TemporalConvNet(dim_in,[3],3,0.2)
-        # for _ in range(1, num_layers):
-        #     self.dcrnn_cells.append(GRU(node_num, dim_out, dim_out,self.adj ,cheb_k, embed_dim))
-
-        self.gcn=GCN(dim_in, dim_out, self.adj, cheb_k, embed_dim)
-        self.tcn = TemporalConvNet( dim_in, [1, 1, 1], 2, 0.2)
-        self.TA_layer = TA_layer(dim_out, dim_out, 2, 2)
-
-    def forward(self, x, node_embeddings):
-
-        assert x.shape[2] == self.node_num and x.shape[3] == self.input_dim
-        seq_length = x.shape[1]
-        b, t, n, d = x.shape
-        x = x.to(device=device)
-        input = self.gcn(x,node_embeddings)
-        # tcn_input = x  # b*n d t
-        # tcn_input = x
-
-
-        TA_output = self.TA_layer(input)
-        #tcn_output = self.tcn(input.permute(0, 2, 3, 1).reshape(b * n, d, t)).reshape(b, n, d, t).permute(0, 3, 1, 2)
-        # x_gconv_TA = self.gcn(TA_output, node_embeddings)
-        # x_gconv_TA = self.gcn(x_gconv_TA, node_embeddings)
-
-        # x_gconv_tcn = self.gcn(tcn_output, node_embeddings)
-        # x_gconv_tcn = self.gcn(x_gconv_tcn, node_embeddings)
-
-
-
-        # current_inputs = x
-        # output_hidden = []
-        # for i in range(self.num_layers):
-        #     state = init_state[i]
-        #     inner_states = []
-        #     for t in range(seq_length):
-        #         state = self.dcrnn_cells[i](current_inputs[:, t, :, :], state, node_embeddings)
-        #         inner_states.append(state)
-        #     output_hidden.append(state)
-        #     current_inputs = torch.stack(inner_states, dim=1)
-        #current_inputs: the outputs of last layer: (B, T, N, hidden_dim)
-        #output_hidden: the last state for each layer: (num_layers, B, N, hidden_dim)
-        #last_state: (B, N, hidden_dim)
-        # current_inputs=self.TA_layer(current_inputs)
-        # return current_inputs, output_hidden
-        # return x_gconv_tcn+x_gconv_TA
-        return TA_output+tcn_output
-        # return tcn_output
-
-    # def init_hidden(self, batch_size):
-    #     init_states = []
-    #     for i in range(self.num_layers):
-    #         init_states.append(self.dcrnn_cells[i].init_hidden_state(batch_size))
-    #     return torch.stack(init_states, dim=0)      #(num_layers, B, N, hidden_dim)
+# class TARGCN_cell2(nn.Module):
+#     def __init__(self, node_num, dim_in, dim_out, cheb_k, embed_dim, adj,num_layers=1):
+#         super(TARGCN_cell2, self).__init__()
+#         assert num_layers >= 1, 'At least one GRU layer in the Encoder.'
+#         self.adj=adj
+#         self.node_num = node_num
+#         self.input_dim = dim_in
+#         self.num_layers = num_layers
+#
+#         # self.dcrnn_cells = nn.ModuleList()
+#         # self.dcrnn_cells.append(GRU(node_num, dim_in, dim_out, self.adj,cheb_k, embed_dim))
+#         # self.tcn=TemporalConvNet(dim_in,[3],3,0.2)
+#         # for _ in range(1, num_layers):
+#         #     self.dcrnn_cells.append(GRU(node_num, dim_out, dim_out,self.adj ,cheb_k, embed_dim))
+#
+#         self.gcn=GCN(dim_in, dim_out, self.adj, cheb_k, embed_dim)
+#         self.tcn = TemporalConvNet( dim_in, [1, 1, 1], 2, 0.2)
+#         self.TA_layer = TA_layer(dim_out, dim_out, 2, 2)
+#
+#     def forward(self, x, node_embeddings):
+#
+#         assert x.shape[2] == self.node_num and x.shape[3] == self.input_dim
+#         seq_length = x.shape[1]
+#         b, t, n, d = x.shape
+#         x = x.to(device=device)
+#         input = self.gcn(x,node_embeddings)
+#         # tcn_input = x  # b*n d t
+#         # tcn_input = x
+#
+#
+#         TA_output = self.TA_layer(input)
+#         #tcn_output = self.tcn(input.permute(0, 2, 3, 1).reshape(b * n, d, t)).reshape(b, n, d, t).permute(0, 3, 1, 2)
+#         # x_gconv_TA = self.gcn(TA_output, node_embeddings)
+#         # x_gconv_TA = self.gcn(x_gconv_TA, node_embeddings)
+#
+#         # x_gconv_tcn = self.gcn(tcn_output, node_embeddings)
+#         # x_gconv_tcn = self.gcn(x_gconv_tcn, node_embeddings)
+#
+#
+#
+#         # current_inputs = x
+#         # output_hidden = []
+#         # for i in range(self.num_layers):
+#         #     state = init_state[i]
+#         #     inner_states = []
+#         #     for t in range(seq_length):
+#         #         state = self.dcrnn_cells[i](current_inputs[:, t, :, :], state, node_embeddings)
+#         #         inner_states.append(state)
+#         #     output_hidden.append(state)
+#         #     current_inputs = torch.stack(inner_states, dim=1)
+#         #current_inputs: the outputs of last layer: (B, T, N, hidden_dim)
+#         #output_hidden: the last state for each layer: (num_layers, B, N, hidden_dim)
+#         #last_state: (B, N, hidden_dim)
+#         # current_inputs=self.TA_layer(current_inputs)
+#         # return current_inputs, output_hidden
+#         # return x_gconv_tcn+x_gconv_TA
+#         return TA_output+tcn_output
+#         # return tcn_output
+#
+#     # def init_hidden(self, batch_size):
+#     #     init_states = []
+#     #     for i in range(self.num_layers):
+#     #         init_states.append(self.dcrnn_cells[i].init_hidden_state(batch_size))
+#     #     return torch.stack(init_states, dim=0)      #(num_layers, B, N, hidden_dim)
 
 class TCMGCN(nn.Module):
     def __init__(self, args,adj=None):
@@ -372,10 +373,13 @@ class TCMGCN(nn.Module):
         self.node_embeddings2 = nn.Parameter(torch.randn(self.num_node, args.embed_dim), requires_grad=True)
 
         self.encoder = TCMGCN_cell(args.num_nodes, args.input_dim, args.rnn_units, args.cheb_k,
-                                args.embed_dim,self.adj, args.num_layers)
-        # self.encoder2 = TARGCN_cell(args.num_nodes, args.input_dim, args.rnn_units, args.cheb_k,
-        #                            args.embed_dim, self.adj, args.num_layers)
-
+                                args.embed_dim,self.adj, 1,64,1,args.num_layers)
+        # self.encoder2 = TCMGCN_cell(args.num_nodes, args.rnn_units, args.rnn_units, args.cheb_k,
+        #                             args.embed_dim, self.adj, 64, 64, 1, args.num_layers)
+        self.encoder2 = TCMGCN_cell(args.num_nodes, args.rnn_units, 128, args.cheb_k,
+                                   args.embed_dim, self.adj, 64,128,1,args.num_layers)
+        self.encoder3 = TCMGCN_cell(args.num_nodes, 128, args.rnn_units, args.cheb_k,
+                                    args.embed_dim, self.adj, 128, 64, 1, args.num_layers)
 
         #predictor
         self.end_conv = nn.Conv2d(6, args.horizon * self.output_dim, kernel_size=(1, self.hidden_dim), bias=True)
@@ -387,7 +391,11 @@ class TCMGCN(nn.Module):
         #supports = F.softmax(F.relu(torch.mm(self.nodevec1, self.nodevec1.transpose(0,1))), dim=1)
 
         # init_state = self.encoder.init_hidden(source.shape[0])
-        output = self.encoder(source, self.node_embeddings1,self.node_embeddings2)      #B, T, N, hidden
+        output= self.encoder(source, self.node_embeddings1,self.node_embeddings2)      #B, T, N, hidden
+        output= self.encoder2(output, self.node_embeddings1,self.node_embeddings2)+output      #B, T, N, hidden
+        output= self.encoder3(output, self.node_embeddings1,self.node_embeddings2)+output      #B, T, N, hidden
+
+
         output = output[:, -6:, :, :]
         output = self.end_conv((output))                         #B, T*C, N, 1
 
