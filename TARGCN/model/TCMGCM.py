@@ -378,8 +378,8 @@ class TCMGCN(nn.Module):
         #                             args.embed_dim, self.adj, 64, 64, 1, args.num_layers)
         self.encoder2 = TCMGCN_cell(args.num_nodes, args.rnn_units, args.rnn_units, args.cheb_k,
                                    args.embed_dim, self.adj, 64,64,1,args.num_layers)
-        self.encoder3 = TCMGCN_cell(args.num_nodes, args.rnn_units, args.rnn_units, args.cheb_k,
-                                    args.embed_dim, self.adj, 64, 64, 1, args.num_layers)
+        # self.encoder3 = TCMGCN_cell(args.num_nodes, args.rnn_units, args.rnn_units, args.cheb_k,
+        #                             args.embed_dim, self.adj, 64, 64, 1, args.num_layers)
 
         #predictor
         self.end_conv = nn.Conv2d(6, args.horizon * self.output_dim, kernel_size=(1, self.hidden_dim), bias=True)
@@ -393,7 +393,7 @@ class TCMGCN(nn.Module):
         # init_state = self.encoder.init_hidden(source.shape[0])
         output= self.encoder(source, self.node_embeddings1,self.node_embeddings2)      #B, T, N, hidden
         output= self.encoder2(output, self.node_embeddings1,self.node_embeddings2)+output      #B, T, N, hidden
-        output= self.encoder3(output, self.node_embeddings1,self.node_embeddings2)+output      #B, T, N, hidden
+        # output= self.encoder3(output, self.node_embeddings1,self.node_embeddings2)+output      #B, T, N, hidden
 
 
         output = output[:, -6:, :, :]
