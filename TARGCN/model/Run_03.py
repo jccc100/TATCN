@@ -129,7 +129,7 @@ def get_adjacent_matrix(distance_file: str, num_nodes: int, id_file: str = None,
                         A[node_id_dict[j], node_id_dict[i]] = 1. / distance
                     else:
                         raise ValueError("graph type is not correct (connect or distance)")
-        return A
+        return torch.from_numpy(A)
 
     with open(distance_file, "r") as f_d:
         f_d.readline()
