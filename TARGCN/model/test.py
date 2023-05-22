@@ -361,6 +361,10 @@ if __name__ == '__main__':
             i, j, distance = int(row[0]), int(row[1]), float(row[2])
             # A[id_dict[i], id_dict[j]] = 1
             A[id_dict[i], id_dict[j]] = distance
+            if distance<=0.:
+                print(distance)
+                print(i,j)
+                print("aaa")
 
     print(A.shape)
 
