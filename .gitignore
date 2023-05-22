@@ -1,3 +1,3 @@
 .idea
-model_para/
+model_para/*.pth
 epoch_*.pth
