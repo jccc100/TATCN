@@ -1,0 +1,21 @@
+2023-05-22 08:39: Experiment log path in: C:\旧电脑文件\毕业相关\第二个模型\TATCN\TARGCN\model\experiments\PEMSD4\20230522083953
+2023-05-22 08:39: Train Epoch 124: 0/317 Loss: 19.315033
+2023-05-22 08:40: Train Epoch 124: 20/317 Loss: 16.124470
+2023-05-22 08:40: Train Epoch 124: 40/317 Loss: 18.742529
+2023-05-22 08:40: Train Epoch 124: 60/317 Loss: 18.794619
+2023-05-22 08:40: Train Epoch 124: 80/317 Loss: 20.563709
+2023-05-22 08:40: Train Epoch 124: 100/317 Loss: 17.352715
+2023-05-22 08:40: Train Epoch 124: 120/317 Loss: 17.111948
+2023-05-22 08:40: Train Epoch 124: 140/317 Loss: 16.980553
+2023-05-22 08:40: Train Epoch 124: 160/317 Loss: 18.050337
+2023-05-22 08:40: Train Epoch 124: 180/317 Loss: 17.179077
+2023-05-22 08:40: Train Epoch 124: 200/317 Loss: 17.478695
+2023-05-22 08:40: Train Epoch 124: 220/317 Loss: 16.285669
+2023-05-22 08:40: Train Epoch 124: 240/317 Loss: 17.852871
+2023-05-22 08:41: Train Epoch 124: 260/317 Loss: 19.387243
+2023-05-22 08:41: Train Epoch 124: 280/317 Loss: 19.134960
+2023-05-22 08:41: Train Epoch 124: 300/317 Loss: 17.526787
+2023-05-22 08:41: **********Train Epoch 124: averaged Loss: 18.086986, tf_ratio: 1.000000
+2023-05-22 08:41: **********Val Epoch 124: average Loss: 19.546608
+2023-05-22 08:41: ******Current best model saved:model_para/PEMSD4/epoch_124.pth!
+2023-05-22 08:41: Train Epoch 125: 0/317 Loss: 17.067259

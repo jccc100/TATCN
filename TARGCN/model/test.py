@@ -290,7 +290,115 @@ class Archer(nn.Module):
         return out
 
 
+# gen adj
+    def get_adjacent_matrix(distance_file: str, num_nodes: int, id_file: str = None, graph_type="distance") -> np.array:
+        """
+        :param distance_file: str, path of csv file to save the distances between nodes.
+        :param num_nodes: int, number of nodes in the graph
+        :param id_file: str, path of txt file to save the order of the nodes.
+        :param graph_type: str, ["connect", "distance"]
+        :return:
+            np.array(N, N)
+        """
+        A = np.zeros([int(num_nodes), int(num_nodes)])
+
+        if id_file:
+            with open(id_file, "r") as f_id:
+
+                node_id_dict = {int(node_id): idx for idx, node_id in enumerate(f_id.read().strip().split("\n"))}
+
+                with open(distance_file, "r") as f_d:
+                    f_d.readline()
+                    reader = csv.reader(f_d)
+                    for item in reader:
+                        if len(item) != 3:
+                            continue
+                        i, j, distance = int(item[0]), int(item[1]), float(item[2])
+                        if graph_type == "connect":
+                            A[node_id_dict[i], node_id_dict[j]] = 1.
+                            A[node_id_dict[j], node_id_dict[i]] = 1.
+                        elif graph_type == "distance":
+                            A[node_id_dict[i], node_id_dict[j]] = 1. / distance
+                            A[node_id_dict[j], node_id_dict[i]] = 1. / distance
+                        else:
+                            raise ValueError("graph type is not correct (connect or distance)")
+            return A
+
+        with open(distance_file, "r") as f_d:
+            f_d.readline()
+            reader = csv.reader(f_d)
+            for item in reader:
+                if len(item) != 3:
+                    continue
+                i, j, distance = int(item[0]), int(item[1]), float(item[2])
+
+                if graph_type == "connect":
+                    A[i, j], A[j, i] = 1., 1.
+                elif graph_type == "distance":
+                    A[i, j] = 1. / distance
+                    A[j, i] = 1. / distance
+                else:
+                    raise ValueError("graph type is not correct (connect or distance)")
+
+        return torch.from_numpy(A)
+
 if __name__ == '__main__':
+    distance_file = '../data/PEMS03/distance.csv'
+    print(distance_file)
+    import csv
+
+    A = np.zeros([int(358), int(358)])
+
+    with open('../data/PEMS03/PEMS03.txt', 'r') as f:
+        id_dict = {int(i): idx for idx, i in enumerate(f.read().strip().split('\n'))}  # 把节点id（idx）映射成从0开始的索引
+
+    with open(distance_file, 'r') as f:
+        f.readline()  # 略过表头那一行
+        reader = csv.reader(f)
+        for row in reader:
+            if len(row) != 3:
+                continue
+            i, j, distance = int(row[0]), int(row[1]), float(row[2])
+            # A[id_dict[i], id_dict[j]] = 1
+            A[id_dict[i], id_dict[j]] = distance
+
+    print(A.shape)
+
+    exit()
+
+
+    with open(distance_file, "r") as f_d:
+        f_d.readline()
+        reader = csv.reader(f_d)
+        max1=0
+        min1=100000000
+        for item in reader:
+            if len(item) != 3:
+                continue
+            i, j, distance = int(item[0]), int(item[1]), float(item[2])
+            if i>max1:
+                max1=i
+            if min1>i:
+                min1=i
+            if j>max1:
+                max1=j
+            if min1>j:
+                min1=j
+        print(max1,min1)
+        print(max1-min1)
+
+            # if graph_type == "connect":
+            #     A[i, j], A[j, i] = 1., 1.
+            # elif graph_type == "distance":
+            #     A[i, j] = 1. / distance
+            #     A[j, i] = 1. / distance
+            # else:
+            #     raise ValueError("graph type is not correct (connect or distance)")
+
+
+
+    exit()
+
     adj = np.random.randn(307, 307).astype(np.float32)
     data = torch.randn(64, 12, 307, 1)
     net = Archer(307,2,12, 12, 1, 32, 1, adj)
